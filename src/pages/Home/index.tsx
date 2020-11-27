@@ -13,16 +13,16 @@ import {
   TitleContainer,
 } from '../../global-styles/header/header.styles';
 import {
+  Container,
   PokemonContainer,
   PokeImage,
   DetailsContainer,
   Name,
   PokeName,
   PokeTypes,
-} from '../../global-styles/container-styles/styles';
-import { Container } from './styles';
+} from './styles';
 
-interface Pokemon {
+export interface Pokemon {
   id: string;
   weight: string;
   height: string;
@@ -72,8 +72,8 @@ const Home: React.FC = () => {
   }, [searchPokemon]);
 
   const navigateToDetails = useCallback(
-    (selectedPokemon: Pokemon) => {
-      navigate('Details', { selectedPokemon });
+    (pokemonId: string) => {
+      navigate('Details', { pokemonId });
     },
     [navigate],
   );
@@ -100,7 +100,7 @@ const Home: React.FC = () => {
           placeholder="Type the Pokémon name"
         />
         {pokemon.id ? (
-          <PokemonContainer onPress={() => navigateToDetails(pokemon)}>
+          <PokemonContainer onPress={() => navigateToDetails(pokemon.id)}>
             <PokeImage
               source={{
                 uri: `https://pokeres.bastionbot.org/images/pokemon/${pokemon?.id}.png`,
@@ -116,7 +116,7 @@ const Home: React.FC = () => {
               <Name>Types: </Name>
               {pokemon.types.map(t => {
                 return (
-                  <PokeTypes>
+                  <PokeTypes key={t.type.name}>
                     {`${
                       t.type.name[0].toUpperCase() + t.type.name.substr(1)
                     }, `}
