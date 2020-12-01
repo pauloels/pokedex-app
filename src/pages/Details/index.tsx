@@ -91,6 +91,26 @@ const Details: React.FC = () => {
 
         const thisPokemon = response.data;
 
+        thisPokemon.stats.forEach((p, index) => {
+          if (p.stat?.name === 'hp') {
+            p.stat.name = 'HP';
+          } else if (p.stat?.name === 'attack') {
+            p.stat.name = 'ATK';
+          } else if (p.stat?.name === 'defense') {
+            p.stat.name = 'DEF';
+          } else if (p.stat?.name === 'speed') {
+            p.stat.name = 'SPD';
+          } else if (p.stat.name === 'special-attack') {
+            thisPokemon.stats.splice(index, 1);
+          }
+        });
+
+        thisPokemon.stats.forEach((p, index) => {
+          if (p.stat.name === 'special-defense') {
+            thisPokemon.stats.splice(index, 1);
+          }
+        });
+
         setPokemon(thisPokemon);
       } catch (err) {
         console.log(err);
@@ -128,12 +148,35 @@ const Details: React.FC = () => {
 
         const url = pokeList
           .filter(p => p !== pokemon.name)
-          .map(p => api.get<Pokemon[]>(`pokemon/${p}`));
+          .map(p => api.get<Pokemon>(`pokemon/${p}`));
 
         Promise.all([...url]).then(responses => {
           const result = responses.map(resp => {
             return resp.data;
           });
+
+          result.forEach(res => {
+            res.stats.forEach((p, index) => {
+              if (p.stat?.name === 'hp') {
+                p.stat.name = 'HP';
+              } else if (p.stat?.name === 'attack') {
+                p.stat.name = 'ATK';
+              } else if (p.stat?.name === 'defense') {
+                p.stat.name = 'DEF';
+              } else if (p.stat?.name === 'speed') {
+                p.stat.name = 'SPD';
+              } else if (p.stat.name === 'special-attack') {
+                res.stats.splice(index, 1);
+              }
+            });
+
+            res.stats.forEach((p, index) => {
+              if (p.stat.name === 'special-defense') {
+                res.stats.splice(index, 1);
+              }
+            });
+          });
+
           setPokemonFamilyTree(result);
         });
       } catch (err) {
@@ -186,45 +229,28 @@ const Details: React.FC = () => {
             <PokeStats>Stats</PokeStats>
             <AllStatsContainer>
               {pokemon.id ? (
-                pokemon.stats.map(p => {
-                  if (
-                    p.stat.name === 'hp' ||
-                    p.stat.name === 'attack' ||
-                    p.stat.name === 'defense' ||
-                    p.stat.name === 'speed'
-                  ) {
-                    return (
-                      <StatsContainer key={p.stat.name}>
-                        <Hp>
-                          {p.stat.name === 'hp'
-                            ? 'HP'
-                            : p.stat.name === 'attack'
-                            ? 'ATK'
-                            : p.stat.name === 'defense'
-                            ? 'DEF'
-                            : p.stat.name === 'speed'
-                            ? 'SPD'
-                            : ''}
-                        </Hp>
-                        <HorizontalBar>
-                          <Power
-                            style={{
-                              width: p.base_stat + p.base_stat,
-                            }}
-                          >
-                            <Text style={{ fontSize: 10 }}>
-                              {`${p.base_stat}`}/100
-                            </Text>
-                          </Power>
-                          <TotalPower
-                            style={{
-                              width: 200 - (p.base_stat + p.base_stat),
-                            }}
-                          />
-                        </HorizontalBar>
-                      </StatsContainer>
-                    );
-                  }
+                pokemon.stats?.map(p => {
+                  return (
+                    <StatsContainer key={p.stat?.name}>
+                      <Hp>{p.stat.name}</Hp>
+                      <HorizontalBar>
+                        <Power
+                          style={{
+                            width: p.base_stat + p.base_stat,
+                          }}
+                        >
+                          <Text style={{ fontSize: 10 }}>
+                            {`${p.base_stat}`}/100
+                          </Text>
+                        </Power>
+                        <TotalPower
+                          style={{
+                            width: 200 - (p.base_stat + p.base_stat),
+                          }}
+                        />
+                      </HorizontalBar>
+                    </StatsContainer>
+                  );
                 })
               ) : (
                 <View />
@@ -239,7 +265,7 @@ const Details: React.FC = () => {
           horizontal
           data={pokemonFamilyTree}
           showsVerticalScrollIndicator={false}
-          keyExtractor={poke => poke.id}
+          keyExtractor={poke => poke.name}
           renderItem={({ item: poke }) => (
             <PokemonContainer onPress={() => handleSelectPokemon(poke)}>
               <PokeIdTree># {poke.id}</PokeIdTree>
