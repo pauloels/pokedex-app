@@ -142,14 +142,18 @@ export const Power = styled.View`
   background-color: #ff9000;
   border-top-left-radius: 20px;
   border-bottom-left-radius: 20px;
+  border-top-right-radius: 20px;
+  border-bottom-right-radius: 20px;
   justify-content: center;
   align-items: center;
+  z-index: 1;
 `;
 
 export const TotalPower = styled.View`
   background-color: #c4c4c4;
   border-top-right-radius: 20px;
   border-bottom-right-radius: 20px;
+  margin-left: -5px;
 `;
 
 export const FamilyTree = styled.Text`

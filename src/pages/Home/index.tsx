@@ -62,6 +62,17 @@ const Home: React.FC = () => {
 
         const thisPokemon = response.data;
 
+        thisPokemon.name =
+          thisPokemon.name[0].toUpperCase() + thisPokemon.name.substr(1);
+        thisPokemon.types.forEach((s, index) => {
+          s.type.name = s.type.name[0].toUpperCase() + s.type.name.substr(1);
+
+          if (index < thisPokemon.types.length - 1) {
+            s.type.name = `${s.type.name}, `;
+          } else {
+            s.type.name;
+          }
+        });
         setPokemon(thisPokemon);
       } catch (err) {
         console.log(err);
@@ -115,13 +126,7 @@ const Home: React.FC = () => {
             <DetailsContainer>
               <Name>Types: </Name>
               {pokemon.types.map(t => {
-                return (
-                  <PokeTypes key={t.type.name}>
-                    {`${
-                      t.type.name[0].toUpperCase() + t.type.name.substr(1)
-                    }, `}
-                  </PokeTypes>
-                );
+                return <PokeTypes key={t.type.name}>{t.type.name}</PokeTypes>;
               })}
             </DetailsContainer>
           </PokemonContainer>

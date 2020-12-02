@@ -81,6 +81,7 @@ const Details: React.FC = () => {
   const { goBack } = useNavigation();
   const { pokemonId } = route.params as RouteParams;
 
+  const [pokeNameList, setPokeNameList] = useState<string[]>([]);
   const [pokemon, setPokemon] = useState<Pokemon>({} as Pokemon);
   const [pokemonFamilyTree, setPokemonFamilyTree] = useState<Pokemon[]>([]);
 
@@ -111,6 +112,9 @@ const Details: React.FC = () => {
           }
         });
 
+        thisPokemon.name =
+          thisPokemon.name[0].toUpperCase() + thisPokemon.name.substr(1);
+
         setPokemon(thisPokemon);
       } catch (err) {
         console.log(err);
@@ -123,9 +127,8 @@ const Details: React.FC = () => {
   useEffect(() => {
     async function loadEvolution(): Promise<void> {
       try {
-        const response = await api.get<Species>(
-          `/pokemon-species/${pokemon.name}`,
-        );
+        const pokeName = pokemon.name[0].toLowerCase() + pokemon.name.substr(1);
+        const response = await api.get<Species>(`/pokemon-species/${pokeName}`);
 
         const arrayUrl = response.data.evolution_chain.url.split('/');
 
@@ -146,39 +149,7 @@ const Details: React.FC = () => {
           p.evolves_to.forEach(poke => pokeList.push(poke.species.name)),
         );
 
-        const url = pokeList
-          .filter(p => p !== pokemon.name)
-          .map(p => api.get<Pokemon>(`pokemon/${p}`));
-
-        Promise.all([...url]).then(responses => {
-          const result = responses.map(resp => {
-            return resp.data;
-          });
-
-          result.forEach(res => {
-            res.stats.forEach((p, index) => {
-              if (p.stat?.name === 'hp') {
-                p.stat.name = 'HP';
-              } else if (p.stat?.name === 'attack') {
-                p.stat.name = 'ATK';
-              } else if (p.stat?.name === 'defense') {
-                p.stat.name = 'DEF';
-              } else if (p.stat?.name === 'speed') {
-                p.stat.name = 'SPD';
-              } else if (p.stat.name === 'special-attack') {
-                res.stats.splice(index, 1);
-              }
-            });
-
-            res.stats.forEach((p, index) => {
-              if (p.stat.name === 'special-defense') {
-                res.stats.splice(index, 1);
-              }
-            });
-          });
-
-          setPokemonFamilyTree(result);
-        });
+        setPokeNameList(pokeList);
       } catch (err) {
         console.log(err);
       }
@@ -186,6 +157,57 @@ const Details: React.FC = () => {
 
     loadEvolution();
   }, [pokemon.name]);
+
+  useEffect(() => {
+    try {
+      const url = pokeNameList
+        .filter(p => p !== pokemon.name)
+        .map(p => api.get<Pokemon>(`pokemon/${p}`));
+
+      Promise.all([...url]).then(responses => {
+        const result = responses.map(resp => {
+          return resp.data;
+        });
+
+        result.forEach(res => {
+          res.name = res.name[0].toUpperCase() + res.name.substr(1);
+          res.stats.forEach((p, index) => {
+            if (p.stat?.name === 'hp') {
+              p.stat.name = 'HP';
+            } else if (p.stat?.name === 'attack') {
+              p.stat.name = 'ATK';
+            } else if (p.stat?.name === 'defense') {
+              p.stat.name = 'DEF';
+            } else if (p.stat?.name === 'speed') {
+              p.stat.name = 'SPD';
+            } else if (p.stat.name === 'special-attack') {
+              res.stats.splice(index, 1);
+            }
+          });
+
+          res.stats.forEach((p, index) => {
+            if (p.stat.name === 'special-defense') {
+              res.stats.splice(index, 1);
+            }
+          });
+
+          res.types.forEach((t, index) => {
+            t.type.name = t.type.name[0].toUpperCase() + t.type.name.substr(1);
+
+            if (index < res.types.length - 1) {
+              t.type.name = `${t.type.name}, `;
+            } else {
+              t.type.name;
+            }
+          });
+        });
+
+        setPokemonFamilyTree(result.filter(p => p.name !== pokemon.name));
+      });
+    } catch (err) {
+      console.log(err);
+    }
+  }, [pokeNameList, pokemon.name]);
 
   const handleSelectPokemon = useCallback((item: Pokemon) => {
     setPokemon(item);
@@ -236,16 +258,23 @@ const Details: React.FC = () => {
                       <HorizontalBar>
                         <Power
                           style={{
-                            width: p.base_stat + p.base_stat,
+                            width:
+                              p.base_stat + p.base_stat > 200
+                                ? 200
+                                : p.base_stat + p.base_stat,
                           }}
                         >
                           <Text style={{ fontSize: 10 }}>
-                            {`${p.base_stat}`}/100
+                            {`${p.base_stat}`}
                           </Text>
                         </Power>
                         <TotalPower
                           style={{
-                            width: 200 - (p.base_stat + p.base_stat),
+                            width:
+                              200 -
+                              (p.base_stat + p.base_stat > 200
+                                ? 200
+                                : p.base_stat + p.base_stat),
                           }}
                         />
                       </HorizontalBar>
@@ -283,9 +312,7 @@ const Details: React.FC = () => {
                 {poke.id ? (
                   poke.types.map(t => {
                     return (
-                      <PokeTypes key={t.type.name}>
-                        {`${t.type.name}, `}
-                      </PokeTypes>
+                      <PokeTypes key={t.type.name}>{t.type.name}</PokeTypes>
                     );
                   })
                 ) : (
